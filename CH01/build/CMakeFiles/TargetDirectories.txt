@@ -1,0 +1,2 @@
+C:/Users/bsing/OneDrive/Documents/ESP32_Book_Projects/CH01/sntp/sntp/build/CMakeFiles/edit_cache.dir
+C:/Users/bsing/OneDrive/Documents/ESP32_Book_Projects/CH01/sntp/sntp/build/CMakeFiles/rebuild_cache.dir
