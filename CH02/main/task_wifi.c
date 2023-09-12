@@ -24,9 +24,23 @@
 
 #include "task_wifi.h"
 
+// PROJECT DETAILS
+/*
+	The wifi.c file implement the functions to manage the wifi connection and credentials.
+	SECTIONS:
+	3.1 - Default Wi-Fi Credentials (Set using SDK Configuration option or Update the MACROs directly in this file)
+	3.2 - WiFi configuration settings
+	3.3 - Notification API function
+	3.4 - Wi-Fi initialization
+	3.5 - Wait for notification
+	3.6 - Read new credentials from storage
+	3.7 - Wi-Fi Event handler private function
+*/
+
 // DEFINES
 #define TAG "task_wifi"
 
+// 3.1 - Default Wi-Fi Credentials (Set using SDK Configuration option or Update the MACROs directly in this file)
 /* WiFi configuration that you can set via project configuration menu
 
    If you'd rather not, just change the below entries to strings with
@@ -36,6 +50,7 @@
 #define EXAMPLE_ESP_WIFI_PASS CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_MAXIMUM_RETRY CONFIG_ESP_MAXIMUM_RETRY
 
+// 3.2 - WiFi configuration settings
 /* The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
  * - we failed to connect after the maximum amount of retries */
@@ -73,8 +88,10 @@
 
 // GLOBALS
 static TaskHandle_t xHandleWiFi = NULL;
+
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
+
 static int s_retry_num = 0;
 static wifi_config_t wifi_config;
 
@@ -93,6 +110,7 @@ void task_wifi_setup(void)
 	configASSERT(xHandleWiFi);
 }
 
+// 3.3 - Notification API function
 void task_wifi_notify_new_credentials(void)
 {
 	// Now notify the task
@@ -102,6 +120,7 @@ void task_wifi_notify_new_credentials(void)
 
 static void task_wifi_function(void *pvParameters)
 {
+	// 3.4 - Wi-Fi initialization
 	ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 	s_wifi_event_group = xEventGroupCreate();
 
@@ -147,11 +166,14 @@ static void task_wifi_function(void *pvParameters)
 
 	while (true)
 	{
+		// 3.5 - Wait for notification
 		BaseType_t notification_value = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		if (notification_value == 1)
 		{
+			// 3.6 - Read new credentials from storage
 			ESP_LOGI(TAG, "WiFi Task Notified.");
-			/* Following function, Check if we have credentials in storage otherwise use defaults */
+
+			/* Following function will use stored credentials in storage otherwise defaults */
 			task_wifi_read_credentials_from_storage();
 
 			/* wifi_config should have updated configurations, lets connect */
@@ -163,6 +185,7 @@ static void task_wifi_function(void *pvParameters)
 	}
 }
 
+// 3.7 - Wi-Fi Event handler private function
 static void event_handler(void *arg, esp_event_base_t event_base,
 						  int32_t event_id, void *event_data)
 {

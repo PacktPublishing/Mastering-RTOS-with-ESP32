@@ -33,6 +33,23 @@
 #include "task_blink.h"
 #include "utils.h"
 
+// PROJECT DETAILS
+/*
+	The webserver.c contains functions to service local http webserver feature, where a webpage which is hosted on ESP32 can be accessed from a device in same network
+	to check the current Wi-Fi credentials and also new configuration can be updated.
+	SECTIONS:
+	4.1 Function to handle POST requests for updating WiFi credentials
+	4.2 - Get value of expected key from query string
+	4.3 - save new wifi configuration into memory
+	4.4 - Send notification to wifi task
+	4.5 - Resume LED Blink Task to indicate user
+	4.6 - Function to handle GET requests for the configuration page
+	4.7 - Sample HTML page preparation
+	4.8 - Function to get the WiFi connection status
+
+	Note: When new credentials will be provided, the html page will be no more accessible as ESP32 connects to new network and the same IP is no more valid.
+*/
+
 // DEFINES
 #define TAG "webserver"
 
@@ -65,7 +82,7 @@ void webserver_init(void)
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &config_post_uri));
 }
 
-// Function to handle POST requests for updating WiFi credentials
+// 4.1 Function to handle POST requests for updating WiFi credentials
 static esp_err_t config_post_handler(httpd_req_t *req)
 {
 	// Extract new SSID and password from the POST request content
@@ -91,8 +108,6 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 			return ESP_FAIL;
 		}
 
-		// /* Send back the same data */
-		// httpd_resp_send_chunk(req, buf, ret);
 		remaining -= ret;
 
 		/* Log data received */
@@ -106,7 +121,7 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 
 		found = true;
 
-		/* Get value of expected key from query string */
+		// 4.2 - Get value of expected key from query string
 		if (httpd_query_key_value(buf, "ssid", new_ssid, sizeof(new_ssid)) != ESP_OK)
 		{
 			ESP_LOGE(TAG, "ssid not sent");
@@ -127,12 +142,13 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 			ESP_LOGI(TAG, "SSID: %s", new_ssid);
 			ESP_LOGI(TAG, "PASS: %s", new_password);
 
+			// 4.3 - save new wifi configuration into memory
 			wifi_credentials_update(new_ssid, new_password);
 
-			// send credentials to wifi task
+			// 4.4 - Send notification to wifi task
 			task_wifi_notify_new_credentials();
 
-			// Resume LED Blink Task to indicate user
+			// 4.5 - Resume LED Blink Task to indicate user
 			task_blink_resume();
 		}
 	}
@@ -144,13 +160,15 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
-// Function to handle GET requests for the configuration page
+// 4.6 - Function to handle GET requests for the configuration page
 static esp_err_t config_get_handler(httpd_req_t *req)
 {
 	wifi_config_t wifi_config;
 	esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_config);
 
 	char response[600];
+
+	// 4.7 - Sample HTML page preparation
 	snprintf(response, sizeof(response),
 			 "<html><body>"
 			 "<h1>WiFi Configuration</h1>"
@@ -172,7 +190,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
 	return ESP_OK;
 }
 
-// Function to get the WiFi connection status
+// 4.8 - Function to get the WiFi connection status
 static const char *get_wifi_status(void)
 {
 	wifi_ap_record_t ap_info;

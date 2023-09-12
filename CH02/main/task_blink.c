@@ -17,6 +17,22 @@
 #include "sdkconfig.h"
 #include "task_blink.h"
 
+// PROJECT DETAILS
+/*
+	In task_blink.c file, the LED initialization is done to demonstrate the use case of task suspension and resuming the task when needed.
+	Task will be created and suspended right away. The public API functions are provided to further resume and suspend the task, so that
+	other modules can perform these operations when required.
+	SECTIONS:
+	2.1 - Task Creation
+	2.2 - Suspend the task by default at start
+	2.3 - Task suspend public API function
+	2.4 - Task resume public API function
+	2.5 - Task infinite loop
+	2.6 - Task Suspend API call
+
+	The infinite loop in this case will not consume any resource when task is in suspended state.
+*/
+
 // DEFINES
 #define TAG "task_blink"
 #define BLINK_GPIO CONFIG_BLINK_GPIO
@@ -39,12 +55,16 @@ static void configure_led(void);
  */
 void task_blink_setup(void)
 {
+	// 2.1 - Task Creation
 	static uint8_t ucParameterToPass; // static because variable need to be present when function ends
 	xTaskCreatePinnedToCore(&task_blink_function, TAG, 4096, &ucParameterToPass, tskIDLE_PRIORITY, &xHandleBlink, 0);
 	configASSERT(xHandleBlink);
+
+	// 2.2 - Suspend the task by default at start
 	task_blink_suspend();
 }
 
+// 2.3 - Task suspend public API function
 bool task_blink_suspend(void)
 {
 	if (xHandleBlink == NULL)
@@ -59,6 +79,7 @@ bool task_blink_suspend(void)
 	return true; // task suspended
 }
 
+// 2.4 - Task resume public API function
 bool task_blink_resume(void)
 {
 	if (xHandleBlink == NULL)
@@ -78,12 +99,15 @@ static void task_blink_function(void *pvParameters)
 	static uint8_t loop_count = 0;
 
 	configure_led();
+
+	// 2.5 - Task infinite loop
 	while (true)
 	{
 		ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" : "OFF");
 		blink_led();
-		/* Toggle the LED state */
+		// Toggle the LED state
 		s_led_state = !s_led_state;
+		// delay for half second
 		vTaskDelay(500 / portTICK_PERIOD_MS);
 		loop_count++;
 
@@ -91,6 +115,7 @@ static void task_blink_function(void *pvParameters)
 		// wait for 10 counts as this loop runs at 500 msec delay
 		if (loop_count > 10)
 		{
+			// 2.6 - Task Suspend API call
 			task_blink_suspend();
 		}
 	}
