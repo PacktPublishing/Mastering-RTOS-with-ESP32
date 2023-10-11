@@ -242,7 +242,16 @@ static esp_err_t config_get_handler(httpd_req_t *req)
 			/* Get value of expected key from query string */
 			if (httpd_query_key_value(buf_rx, "ssid", param, sizeof(param)) == ESP_OK)
 			{
-				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "\"ssid\": \"found\"");
+				memset(param, 0, sizeof(param));
+				task_wifi_get_credentials(param, sizeof(param), NULL, 0);
+				if ('\0' != param[0])
+				{
+					buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "\"ssid\": \"%s\"", param);
+				}
+				else
+				{
+					buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "\"ssid\": \"not found\"");
+				}
 			}
 			if (httpd_query_key_value(buf_rx, "rssi", param, sizeof(param)) == ESP_OK)
 			{
@@ -250,7 +259,7 @@ static esp_err_t config_get_handler(httpd_req_t *req)
 			}
 			if (httpd_query_key_value(buf_rx, "status", param, sizeof(param)) == ESP_OK)
 			{
-				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"status\": \"found\"");
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"status\": \"%s\"", is_wifi_connected() ? "Connected" : "Disconnected");
 			}
 
 			buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "}}\r\n");
@@ -393,19 +402,19 @@ static const char *get_wifi_status(void)
 	{
 		if (ap_info.rssi >= -50)
 		{
-			return "Connected (Excellent)";
+			return "Excellent";
 		}
 		else if (ap_info.rssi >= -60)
 		{
-			return "Connected (Good)";
+			return "Good";
 		}
 		else if (ap_info.rssi >= -70)
 		{
-			return "Connected (Fair)";
+			return "Fair";
 		}
 		else
 		{
-			return "Connected (Poor)";
+			return "Poor";
 		}
 	}
 	else

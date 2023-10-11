@@ -95,6 +95,7 @@ static EventGroupHandle_t s_wifi_event_group;
 
 static int s_retry_num = 0;
 static wifi_config_t wifi_config;
+static bool wifi_connection_state = false;
 
 // FUNCTION PROTOTYPES
 static void task_wifi_function(void *pvParameters);
@@ -139,36 +140,46 @@ bool task_wifi_get_credentials(char *ssid, uint16_t ssid_len_max, char *pass, ui
 	uint16_t ssid_len = 0;
 	uint16_t pass_len = 0;
 
-	if (NULL != ssid || NULL != pass)
+	if (NULL != ssid)
 	{
-		ESP_LOGE(TAG, "Params error");
-		return false;
+		ssid_len = strlen((char *)wifi_config.sta.ssid);
+
+		if (ssid_len >= ssid_len_max)
+		{
+			ESP_LOGE(TAG, "ssid length = %d (expected = %d)", ssid_len, ssid_len_max);
+			return false;
+		}
+
+		// clean destination
+		memset(ssid, 0, ssid_len_max);
+
+		// copy data
+		memcpy(ssid, wifi_config.sta.ssid, ssid_len);
 	}
 
-	ssid_len = strlen((char *)wifi_config.sta.ssid);
-	pass_len = strlen((char *)wifi_config.sta.password);
-
-	if (ssid_len >= ssid_len_max)
+	if (NULL != pass)
 	{
-		ESP_LOGE(TAG, "ssid length = %d (expected = %d)", ssid_len, ssid_len_max);
-		return false;
+		pass_len = strlen((char *)wifi_config.sta.password);
+
+		if (pass_len >= pass_len_max)
+		{
+			ESP_LOGE(TAG, "pass length = %d (expected = %d)", pass_len, pass_len_max);
+			return false;
+		}
+
+		// clean destination
+		memset(pass, 0, pass_len_max);
+
+		// copy data
+		memcpy(pass, wifi_config.sta.password, pass_len);
 	}
-
-	if (pass_len >= pass_len_max)
-	{
-		ESP_LOGE(TAG, "pass length = %d (expected = %d)", pass_len, pass_len_max);
-		return false;
-	}
-
-	// clean destination
-	memset(ssid, 0, ssid_len_max);
-	memset(pass, 0, pass_len_max);
-
-	// copy data
-	memcpy(ssid, wifi_config.sta.ssid, ssid_len);
-	memcpy(pass, wifi_config.sta.password, pass_len);
 
 	return true;
+}
+
+bool is_wifi_connected(void)
+{
+	return wifi_connection_state;
 }
 
 static void task_wifi_function(void *pvParameters)
@@ -241,10 +252,12 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 {
 	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
 	{
+		wifi_connection_state = false;
 		esp_wifi_connect();
 	}
 	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
 	{
+		wifi_connection_state = false;
 		if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY)
 		{
 			esp_wifi_connect();
@@ -275,11 +288,12 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 		{
 			ESP_LOGI(TAG, "Connected to SSID: %s", ap_info.ssid);
 		}
-
+		wifi_connection_state = true;
 		task_wifi_credentials_save((char *)wifi_config.sta.ssid, (char *)wifi_config.sta.password);
 	}
 	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_STOP)
 	{
+		wifi_connection_state = false;
 		ESP_LOGD(TAG, "WiFi driver stopped!");
 	}
 	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START)
