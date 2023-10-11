@@ -41,6 +41,7 @@
 #include "task_blink.h"
 #include "utils.h"
 #include "webserver.h"
+#include "task_wifi.h"
 
 // PROJECT DETAILS
 /*
@@ -83,8 +84,6 @@ static esp_err_t style_get_handler(httpd_req_t *req);
 static esp_err_t custom_get_handler(httpd_req_t *req);
 static esp_err_t fonts_get_handler(httpd_req_t *req);
 static esp_err_t favicon_get_handler(httpd_req_t *req);
-
-static void wifi_credentials_update(const char *ssid, const char *password);
 
 // FUNCTIONS
 void webserver_init(void)
@@ -197,13 +196,7 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 			ESP_LOGI(TAG, "PASS: %s", new_password);
 
 			// 4.3 - save new wifi configuration into memory
-			wifi_credentials_update(new_ssid, new_password);
-
-			// 4.4 - Send notification to wifi task
-			task_wifi_notify_new_credentials();
-
-			// 4.5 - Resume LED Blink Task to indicate user
-			task_blink_resume();
+			task_wifi_update_credentials(new_ssid, strlen(new_ssid), new_password, strlen(new_password));
 		}
 	}
 
@@ -355,34 +348,4 @@ const char *get_wifi_status(void)
 	{
 		return "Not Connected";
 	}
-}
-
-static void wifi_credentials_update(const char *ssid, const char *password)
-{
-	nvs_handle_t nvs;
-	esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
-	if (err != ESP_OK)
-	{
-		ESP_LOGE(TAG, "Error opening NVS: %s", esp_err_to_name(err));
-	}
-
-	err = nvs_set_str(nvs, "ssid", ssid);
-	if (err != ESP_OK)
-	{
-		ESP_LOGE(TAG, "Error setting SSID: %s", esp_err_to_name(err));
-	}
-
-	err = nvs_set_str(nvs, "password", password);
-	if (err != ESP_OK)
-	{
-		ESP_LOGE(TAG, "Error setting password: %s", esp_err_to_name(err));
-	}
-
-	err = nvs_commit(nvs);
-	if (err != ESP_OK)
-	{
-		ESP_LOGE(TAG, "Error committing NVS: %s", esp_err_to_name(err));
-	}
-
-	nvs_close(nvs);
 }

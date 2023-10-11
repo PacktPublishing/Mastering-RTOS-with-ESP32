@@ -22,6 +22,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "task_blink.h"
 #include "task_wifi.h"
 
 // PROJECT DETAILS
@@ -101,6 +102,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 						  int32_t event_id, void *event_data);
 static void task_wifi_read_credentials_from_storage(void);
 static void task_wifi_update_config(task_wifi_t *credentials);
+static void task_wifi_credentials_save(char *ssid, char *password);
 
 // FUNCTIONS
 void task_wifi_setup(void)
@@ -116,6 +118,20 @@ void task_wifi_notify_new_credentials(void)
 	// Now notify the task
 	xTaskNotify(xHandleWiFi, 1, eSetBits);
 	ESP_LOGI(TAG, "WiFi Task Notification sent.");
+}
+
+bool task_wifi_update_credentials(char *ssid, uint16_t ssid_len, char *pass, uint16_t pass_len)
+{
+	task_wifi_t credentials;
+
+	credentials.ssid = (char *)ssid;
+	credentials.pass = (char *)pass;
+	credentials.ssid_len = ssid_len;
+	credentials.pass_len = pass_len;
+
+	task_wifi_update_config(&credentials);
+
+	return true;
 }
 
 static void task_wifi_function(void *pvParameters)
@@ -173,9 +189,6 @@ static void task_wifi_function(void *pvParameters)
 			// 3.6 - Read new credentials from storage
 			ESP_LOGI(TAG, "WiFi Task Notified.");
 
-			/* Following function will use stored credentials in storage otherwise defaults */
-			task_wifi_read_credentials_from_storage();
-
 			/* wifi_config should have updated configurations, lets connect */
 			ESP_ERROR_CHECK(esp_wifi_stop());
 			ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
@@ -199,13 +212,18 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 		{
 			esp_wifi_connect();
 			s_retry_num++;
-			ESP_LOGI(TAG, "retry to connect to the AP");
+			ESP_LOGW(TAG, "retry to connect to the AP");
 		}
 		else
 		{
 			xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+			ESP_LOGE(TAG, "Disconnected from AP or unable to connect");
+			task_wifi_read_credentials_from_storage();
 		}
-		ESP_LOGI(TAG, "connect to the AP fail");
+	}
+	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
+	{
+		ESP_LOGI(TAG, "WiFi driver STA connected!");
 	}
 	else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
 	{
@@ -220,6 +238,21 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 		{
 			ESP_LOGI(TAG, "Connected to SSID: %s", ap_info.ssid);
 		}
+
+		task_wifi_credentials_save((char *)wifi_config.sta.ssid, (char *)wifi_config.sta.password);
+	}
+	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_STOP)
+	{
+		ESP_LOGD(TAG, "WiFi driver stopped!");
+	}
+	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START)
+	{
+		ESP_LOGD(TAG, "WiFi driver AP started!");
+	}
+	else
+	{
+		ESP_LOGW(TAG, "WiFi unknown event with id = %ld", event_id);
+		ESP_LOGW(TAG, "WiFi with base_id = %s", (event_base == WIFI_EVENT) ? "WIFI" : "IP");
 	}
 }
 
@@ -303,5 +336,47 @@ static void task_wifi_update_config(task_wifi_t *credentials)
 	memcpy(wifi_config.sta.ssid, credentials->ssid, credentials->ssid_len);
 	memcpy(wifi_config.sta.password, credentials->pass, credentials->pass_len);
 
+	s_retry_num = 0; // reset the retry count
+	task_wifi_notify_new_credentials();
+	task_blink_resume();
+
 	ESP_LOGI(TAG, "Credentials updated in wifi_config");
+}
+
+static void task_wifi_credentials_save(char *ssid, char *password)
+{
+	nvs_handle_t nvs;
+	esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
+	if (err != ESP_OK)
+	{
+		ESP_LOGE(TAG, "Error opening NVS: %s", esp_err_to_name(err));
+	}
+
+	err = nvs_set_str(nvs, "ssid", ssid);
+	if (err != ESP_OK)
+	{
+		ESP_LOGE(TAG, "Error setting SSID: %s", esp_err_to_name(err));
+	}
+	else
+	{
+		ESP_LOGD(TAG, "SSID Updated: %s", ssid);
+	}
+
+	err = nvs_set_str(nvs, "password", password);
+	if (err != ESP_OK)
+	{
+		ESP_LOGE(TAG, "Error setting password: %s", esp_err_to_name(err));
+	}
+	else
+	{
+		ESP_LOGD(TAG, "PASSWORD Updated: %s", password);
+	}
+
+	err = nvs_commit(nvs);
+	if (err != ESP_OK)
+	{
+		ESP_LOGE(TAG, "Error committing NVS: %s", esp_err_to_name(err));
+	}
+
+	nvs_close(nvs);
 }
