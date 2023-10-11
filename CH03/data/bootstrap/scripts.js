@@ -1,12 +1,11 @@
 var timers = [];
 
-getWiFiStatus();
+getParams();
 
 timers.push(
 	setInterval(function () {
-		getWiFiStatus();
-		updateGauge();
-	}, 5000)
+		getParams();
+	}, 3000)
 );
 
 function showContainer(containerId) {
@@ -58,20 +57,38 @@ function updateValueWithId(id, value) {
 	document.getElementById(`${id}`).innerText = value;
 }
 
-function getWiFiStatus() {
-	const apiUrl = "/config?ssid=?&status=?&rssi=?";
+function getParams() {
+	const apiUrl = "/config?ssid=?&status=?&rssi=?&adc_34=?&adc_35=?";
 
 	function handleResponse(error, response) {
 		if (error) {
 			console.error("Error:", error);
 		} else {
-			console.log("SSID:", response.report.ssid);
-			console.log("STATUS:", response.report.status);
-			console.log("RSSI:", response.report.rssi);
+			console.log("Report:", response.report);
 
-			updateValueWithId("wifi_ssid", response.report.ssid);
-			updateValueWithId("wifi_status", response.report.status);
-			updateValueWithId("wifi_signal", response.report.rssi);
+			if (response.report.ssid) {
+				updateValueWithId("wifi_ssid", response.report.ssid);
+			}
+
+			if (response.report.status) {
+				updateValueWithId("wifi_status", response.report.status);
+			}
+
+			if (response.report.rssi) {
+				updateValueWithId("wifi_signal", response.report.rssi);
+			}
+
+			if (response.report.adc_34) {
+				updateGauge1(parseInt(response.report.adc_34));
+			} else {
+				updateGauge1(0);
+			}
+
+			if (response.report.adc_35) {
+				updateGauge2(parseInt(response.report.adc_35));
+			} else {
+				updateGauge2(0);
+			}
 		}
 	}
 
@@ -136,8 +153,14 @@ function sendPostRequest(url, data, callback) {
 	console.log("Sent POST:", url, jsonData);
 }
 
-function updateGauge(value) {
+function updateGauge1(value) {
 	var gauge = document.gauges.get("radial-one");
-	gauge.value = gauge.value + 140;
-	console.log("New Value for Gauge: ", gauge.value);
+	gauge.value = value;
+	console.log("New Value for Gauge1: ", gauge.value);
+}
+
+function updateGauge2(value) {
+	var gauge = document.gauges.get("radial-two");
+	gauge.value = value;
+	console.log("New Value for Gauge2: ", gauge.value);
 }

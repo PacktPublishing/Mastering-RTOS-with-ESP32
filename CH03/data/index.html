@@ -111,7 +111,7 @@
 			class="container mb-3 mt-4"
 			style="display: none">
 			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
-				<div class="card-header">Sensor Readings</div>
+				<div class="card-header">ADC GPIO-34</div>
 				<div class="card-body p-3 text-center">
 					<canvas
 						data-type="radial-gauge"
@@ -137,6 +137,35 @@
 						data-animation-duration="1500"
 						data-animation-rule="linear"
 						id="radial-one"></canvas>
+				</div>
+			</div>
+			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
+				<div class="card-header">ADC GPIO-35</div>
+				<div class="card-body p-3 text-center">
+					<canvas
+						data-type="radial-gauge"
+						data-width="300"
+						data-height="300"
+						data-units="mVolt"
+						data-min-value="0"
+						data-max-value="3360"
+						data-major-ticks="0,280,560,840,1120,1400,1680,1960,2240,2530,2800,3080"
+						data-minor-ticks="2"
+						data-stroke-ticks="true"
+						data-highlights='[
+					{"from": 2530, "to": 3360, "color": "rgba(200, 50, 50, .75)"}
+				]'
+						data-color-plate="#fff"
+						data-border-shadow-width="0"
+						data-borders="false"
+						data-needle-type="arrow"
+						data-needle-width="2"
+						data-needle-circle-size="7"
+						data-needle-circle-outer="true"
+						data-needle-circle-inner="false"
+						data-animation-duration="1500"
+						data-animation-rule="linear"
+						id="radial-two"></canvas>
 				</div>
 			</div>
 		</div>

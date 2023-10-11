@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" "task_blink.c" "task_wifi.c" "utils.c" "webserver.c"
+idf_component_register(SRCS "main.c" "task_blink.c" "task_wifi.c" "utils.c" "webserver.c" "adc_read.c"
                     INCLUDE_DIRS "."
                     EMBED_FILES "favicon.ico" "../data/index.html" "../data/bootstrap/bootstrap.min.css" "../data/bootstrap/custom.min.css" "../data/bootstrap/fonts.css" "../data/bootstrap/gauge.min.js" "../data/bootstrap/scripts.js")
 

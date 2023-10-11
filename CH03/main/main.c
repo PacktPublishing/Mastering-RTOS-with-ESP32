@@ -23,6 +23,7 @@
 #include "webserver.h"
 #include "task_wifi.h"
 #include "task_blink.h"
+#include "adc_read.h"
 
 // PROJECT DETAILS
 /*
@@ -68,6 +69,8 @@ void app_main(void)
 
 	// Initialize modules
 	webserver_init();
+
+	adc_read_setup();
 
 	// Infinite loop (Ideal Task Loop)
 	while (true)

@@ -33,6 +33,7 @@ Following the steps explained in chapter 1 of "Mastering RTOS with ESP32" book:
 
 1. Learn about creating new project [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
 2. Gauges [Web Page](https://canvas-gauges.com/documentation/examples/)
+3. Wrover Kit pinout [Picture](https://www.upesy.com/products/upesy-esp32-wrover-devkit-board)
 
 ## Project folder contents
 

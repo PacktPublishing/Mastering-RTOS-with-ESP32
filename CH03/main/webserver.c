@@ -36,12 +36,15 @@
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
 
 #include "task_wifi.h"
 #include "task_blink.h"
 #include "utils.h"
 #include "webserver.h"
 #include "task_wifi.h"
+#include "adc_read.h"
 
 // PROJECT DETAILS
 /*
@@ -62,6 +65,10 @@
 
 // DEFINES
 #define TAG "webserver"
+
+#define ADC_RESOLUTION 12						  // ADC resolution in bits
+#define ADC_MAX_VALUE ((1 << ADC_RESOLUTION) - 1) // Maximum ADC value
+#define V_REF 3300								  // Reference voltage in millivolts (3.3V)
 
 // GLOBALS
 static httpd_uri_t index_get_uri;
@@ -260,6 +267,14 @@ static esp_err_t config_get_handler(httpd_req_t *req)
 			if (httpd_query_key_value(buf_rx, "status", param, sizeof(param)) == ESP_OK)
 			{
 				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"status\": \"%s\"", is_wifi_connected() ? "Connected" : "Disconnected");
+			}
+			if (httpd_query_key_value(buf_rx, "adc_34", param, sizeof(param)) == ESP_OK)
+			{
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"adc_34\": \"%d\"", adc_read_value_io_34());
+			}
+			if (httpd_query_key_value(buf_rx, "adc_35", param, sizeof(param)) == ESP_OK)
+			{
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"adc_35\": \"%d\"", adc_read_value_io_35());
 			}
 
 			buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "}}\r\n");

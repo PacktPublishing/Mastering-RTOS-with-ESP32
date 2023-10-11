@@ -1,7 +1,15 @@
 {
 	"C_Cpp.intelliSenseEngine": "default",
 	"idf.adapterTargetName": "esp32",
-	"cSpell.words": ["MACSTR", "valuestring", "webserver", "wirelessly"],
+	"cSpell.words": [
+		"ATTEN",
+		"bitwidth",
+		"BITWIDTH",
+		"MACSTR",
+		"valuestring",
+		"webserver",
+		"wirelessly"
+	],
 	"idf.flashType": "UART",
 	"idf.portWin": "COM5",
 	"files.associations": {
