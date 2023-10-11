@@ -19,7 +19,7 @@
 
 	<body>
 		<nav
-			class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top mb-1">
+			class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top mt-1">
 			<div class="container-fluid">
 				<a class="navbar-brand" href="#">Sensor Readings</a>
 				<ul class="navbar-nav me-auto">
@@ -51,70 +51,56 @@
 			</div>
 		</nav>
 
-		<div id="homeContainer" class="container" style="text-align: center">
+		<div class="container text-left">
+			<div class="card bg-light mb-2" style="max-width: 100%">
+				<div class="card-header">Current Wi-Fi Connection</div>
+				<div class="card-body p-3">
+					<h6>
+						Current SSID:
+						<small class="text-body-secondary"
+							><span id="wifi_ssid">Not Connected</span></small
+						>
+					</h6>
+
+					<h6>
+						Connection Status:
+						<small class="text-body-secondary"
+							><span id="wifi_status">Not Available</span></small
+						>
+					</h6>
+
+					<h6>
+						WiFi Signal:
+						<small class="text-body-secondary"
+							><span id="wifi_signal">Not Available</span></small
+						>
+					</h6>
+				</div>
+			</div>
+		</div>
+
+		<div id="homeContainer" class="container text-left">
 			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
 				<div class="card-header">Control Buttons</div>
-				<div
-					class="btn-group-lg m-2"
-					role="group"
-					aria-label="Relay Buttons">
-					<button
-						type="button btn-lg"
-						class="btn btn-primary btn-lg"
-						id="relay1"
-						data-toggle="buttons">
-						Off
-					</button>
-					<button
-						type="button btn-lg"
-						class="btn btn-secondary btn-lg"
-						data-toggle="buttons"
-						id="relay2">
-						Off
-					</button>
-				</div>
-			</div>
-
-			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
-				<div class="card-header">Progress Bar</div>
-				<div
-					class="btn-group-lg m-4"
-					role="group"
-					aria-label="Relay Buttons">
-					<div class="progress">
-						<div
-							class="progress-bar"
-							role="progressbar"
-							style="width: 25%"
-							aria-valuenow="25"
-							aria-valuemin="0"
-							aria-valuemax="100"></div>
-					</div>
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="col-12">
-					<div class="page-header">
-						<h1 id="theme">Default</h1>
-						<p id="description" class="lead">Basic Bootstrap</p>
-						<div class="bs-example">
-							<button type="button" class="btn btn-primary">
-								Primary
-							</button>
-							<button type="button" class="btn btn-secondary">
-								Secondary
-							</button>
-							<button type="button" class="btn btn-success">
-								Success
-							</button>
-							<button type="button" class="btn btn-warning">
-								Warning
-							</button>
-							<button type="button" class="btn btn-danger">
-								Danger
-							</button>
-						</div>
+				<div class="card-body p-3 text-left">
+					<div
+						class="btn-group-lg m-1"
+						role="group"
+						aria-label="Relay Buttons">
+						<button
+							type="button btn-lg"
+							class="btn btn-primary btn-lg mr-4"
+							id="relay1"
+							data-toggle="buttons">
+							Led On
+						</button>
+						<button
+							type="button btn-lg"
+							class="btn btn-secondary btn-lg"
+							data-toggle="buttons"
+							id="relay2">
+							Led Off
+						</button>
 					</div>
 				</div>
 			</div>
@@ -133,31 +119,15 @@
 			class="container mb-3 mt-4"
 			style="text-align: center; display: none">
 			<!-- Content for WiFi -->
-			<div style="text-align: left">
-				<h5>
-					Current SSID:
-					<small class="text-body-secondary"
-						><span id="ssidStatus">Not Connected</span></small
-					>
-				</h5>
-
-				<h5>
-					Connection Status:
-					<small class="text-body-secondary"
-						><span id="connectedStatus">Not Available</span></small
-					>
-				</h5>
-			</div>
 			<div class="mb-3 mt-4" style="text-align: left">
 				<button
 					type="button"
 					class="btn btn-info"
 					onclick="showEditForm()">
-					Edit Wi-Fi
+					Update Wi-Fi
 				</button>
 			</div>
-
-			<form id="editForm" style="text-align: left; display: none">
+			<form id="wifi_update_form" style="text-align: left; display: none">
 				<fieldset>
 					<legend>Enter SSID and Password</legend>
 					<div class="form-group">

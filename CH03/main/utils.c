@@ -64,7 +64,10 @@ bool findStringValueForKey(const char *jsonString, const char *key, char *value,
 
 	if (item && cJSON_IsString(item) && item->valuestring)
 	{
-		snprintf(value, bufferSize, "%s", item->valuestring);
+		if (NULL != value)
+		{
+			snprintf(value, bufferSize, "%s", item->valuestring);
+		}
 		cJSON_Delete(root);
 		return true;
 	}

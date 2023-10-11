@@ -1,3 +1,13 @@
+var timers = [];
+
+getWiFiStatus();
+
+timers.push(
+	setInterval(function () {
+		getWiFiStatus();
+	}, 5000)
+);
+
 function showContainer(containerId) {
 	// Hide all containers
 	document.getElementById("homeContainer").style.display = "none";
@@ -9,23 +19,26 @@ function showContainer(containerId) {
 }
 
 function showEditForm() {
-	document.getElementById("editForm").style.display = "block";
-	document.getElementById("connectedStatus").innerText = "Configuring"; // Clear previous status
-	document.getElementById("ssidStatus").innerText = "Waiting..."; // Clear previous status
+	// Show form now
+	document.getElementById("wifi_update_form").style.display = "block";
+
+	updateValueWithId("wifi_ssid", "Not Set");
+	updateValueWithId("wifi_status", "Configuring...");
+	updateValueWithId("wifi_signal", "Not found");
 }
 
 function connectToWiFi() {
-	document.getElementById("editForm").style.display = "none";
+	// Hide form now
+	document.getElementById("wifi_update_form").style.display = "none";
 
 	const ssid = document.getElementById("ssid").value;
 	const password = document.getElementById("password").value;
 
-	document.getElementById("ssidStatus").innerText = ssid; // Clear previous status
-	document.getElementById("connectedStatus").innerText = "Connecting.."; // Clear previous status
+	updateValueWithId("wifi_ssid", ssid);
+	updateValueWithId("wifi_status", "Connecting...");
 
 	const postData = { ssid: ssid, password: password };
-	const postUrl = "/config"; // Replace with your server endpoint
-	// const postUrl = "http://192.168.2.40/config"; // Replace with your server endpoint
+	const postUrl = "/config";
 
 	function handleResponse(error, response) {
 		if (error) {
@@ -38,6 +51,60 @@ function connectToWiFi() {
 	sendPostRequest(postUrl, postData, handleResponse);
 
 	showContainer("wifi");
+}
+
+function updateValueWithId(id, value) {
+	document.getElementById(`${id}`).innerText = value;
+}
+
+function getWiFiStatus() {
+	const apiUrl = "/config?ssid=?&status=?&rssi=?";
+
+	function handleResponse(error, response) {
+		if (error) {
+			console.error("Error:", error);
+		} else {
+			console.log("SSID:", response.report.ssid);
+			console.log("STATUS:", response.report.status);
+			console.log("RSSI:", response.report.rssi);
+
+			updateValueWithId("wifi_ssid", response.report.ssid);
+			updateValueWithId("wifi_status", response.report.status);
+			updateValueWithId("wifi_signal", response.report.rssi);
+		}
+	}
+
+	sendGetRequest(apiUrl, null, handleResponse);
+}
+
+function sendGetRequest(url, queryParams, callback) {
+	const xhr = new XMLHttpRequest();
+
+	// Append query parameters to the URL
+	if (queryParams) {
+		const params = new URLSearchParams(queryParams);
+		url += "?" + params.toString();
+	}
+
+	xhr.open("GET", url, true);
+
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState == XMLHttpRequest.DONE) {
+			if (xhr.status === 200) {
+				// Request was successful
+				const response = JSON.parse(xhr.responseText);
+				callback(null, response);
+			} else {
+				// Request failed
+				callback(`GET request failed with status ${xhr.status}`, null);
+			}
+		}
+	};
+
+	// Send the request
+	xhr.send();
+
+	console.log("Sent GET", url);
 }
 
 function sendPostRequest(url, data, callback) {
@@ -65,7 +132,7 @@ function sendPostRequest(url, data, callback) {
 	xhr.setRequestHeader("Content-type", "application/json");
 	xhr.send(jsonData);
 
-	console.log("POST:", url, jsonData);
+	console.log("Sent POST:", url, jsonData);
 }
 
 function updateGauge() {

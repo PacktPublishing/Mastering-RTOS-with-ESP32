@@ -72,11 +72,11 @@ static httpd_uri_t custom_get_uri;
 static httpd_uri_t favicon_get_uri;
 static httpd_uri_t fonts_get_uri;
 static httpd_uri_t config_post_uri;
+static httpd_uri_t config_get_uri;
 
 httpd_handle_t server = NULL;
 
 // FUNCTION PROTOTYPES
-static esp_err_t config_post_handler(httpd_req_t *req);
 static esp_err_t index_get_handler(httpd_req_t *req);
 static esp_err_t script_get_handler(httpd_req_t *req);
 static esp_err_t gauge_get_handler(httpd_req_t *req);
@@ -84,6 +84,9 @@ static esp_err_t style_get_handler(httpd_req_t *req);
 static esp_err_t custom_get_handler(httpd_req_t *req);
 static esp_err_t fonts_get_handler(httpd_req_t *req);
 static esp_err_t favicon_get_handler(httpd_req_t *req);
+static esp_err_t config_post_handler(httpd_req_t *req);
+static esp_err_t config_get_handler(httpd_req_t *req);
+static const char *get_wifi_status(void);
 
 // FUNCTIONS
 void webserver_init(void)
@@ -120,7 +123,12 @@ void webserver_init(void)
 	config_post_uri.method = HTTP_POST;
 	config_post_uri.handler = config_post_handler;
 
+	config_get_uri.uri = "/config";
+	config_get_uri.method = HTTP_GET;
+	config_get_uri.handler = config_get_handler;
+
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+	config.max_uri_handlers = 10;
 	ESP_ERROR_CHECK(httpd_start(&server, &config));
 
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &index_get_uri));
@@ -131,6 +139,7 @@ void webserver_init(void)
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &fonts_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &favicon_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &config_post_uri));
+	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &config_get_uri));
 }
 
 // 4.1 Function to handle POST requests for updating WiFi credentials
@@ -205,6 +214,61 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 	httpd_resp_send(req, (const char *)buf, ret);
 
 	// httpd_resp_send(req, NULL, 0);
+	return ESP_OK;
+}
+
+static esp_err_t config_get_handler(httpd_req_t *req)
+{
+	char buf_rx[200];
+	char buf_tx[200];
+	uint16_t buf_rx_len = 0;
+	uint16_t buf_tx_len = 0;
+
+	/* Read URL query string length and allocate memory for length + 1,
+	 * extra byte for null termination */
+	buf_rx_len = httpd_req_get_url_query_len(req) + 1;
+	if (buf_rx_len > 1 && buf_rx_len < sizeof(buf_rx))
+	{
+		// /* Clean the buffers */
+		memset(buf_tx, 0, sizeof(buf_tx));
+		memset(buf_rx, 0, sizeof(buf_rx));
+		if (httpd_req_get_url_query_str(req, buf_rx, buf_rx_len) == ESP_OK)
+		{
+			ESP_LOGI(TAG, "Found URL query => %s", buf_rx);
+			char param[32];
+
+			buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "{\"result\": \"success\", \"report\": {");
+
+			/* Get value of expected key from query string */
+			if (httpd_query_key_value(buf_rx, "ssid", param, sizeof(param)) == ESP_OK)
+			{
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "\"ssid\": \"found\"");
+			}
+			if (httpd_query_key_value(buf_rx, "rssi", param, sizeof(param)) == ESP_OK)
+			{
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"rssi\": \"%s\"", get_wifi_status());
+			}
+			if (httpd_query_key_value(buf_rx, "status", param, sizeof(param)) == ESP_OK)
+			{
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"status\": \"found\"");
+			}
+
+			buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "}}\r\n");
+		}
+	}
+	else
+	{
+		ESP_LOGE(TAG, "Buffer length = %d (received = %d)", sizeof(buf_rx), buf_rx_len);
+		httpd_resp_set_status(req, "300 length issue");
+		httpd_resp_send(req, NULL, 0);
+
+		return ESP_FAIL;
+	}
+
+	httpd_resp_set_status(req, "200 success");
+	httpd_resp_set_type(req, "application/json");
+	httpd_resp_send(req, (const char *)buf_tx, buf_tx_len);
+
 	return ESP_OK;
 }
 
@@ -322,7 +386,7 @@ static esp_err_t favicon_get_handler(httpd_req_t *req)
 }
 
 // 4.8 - Function to get the WiFi connection status
-const char *get_wifi_status(void)
+static const char *get_wifi_status(void)
 {
 	wifi_ap_record_t ap_info;
 	if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK)

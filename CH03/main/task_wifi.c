@@ -134,6 +134,43 @@ bool task_wifi_update_credentials(char *ssid, uint16_t ssid_len, char *pass, uin
 	return true;
 }
 
+bool task_wifi_get_credentials(char *ssid, uint16_t ssid_len_max, char *pass, uint16_t pass_len_max)
+{
+	uint16_t ssid_len = 0;
+	uint16_t pass_len = 0;
+
+	if (NULL != ssid || NULL != pass)
+	{
+		ESP_LOGE(TAG, "Params error");
+		return false;
+	}
+
+	ssid_len = strlen((char *)wifi_config.sta.ssid);
+	pass_len = strlen((char *)wifi_config.sta.password);
+
+	if (ssid_len >= ssid_len_max)
+	{
+		ESP_LOGE(TAG, "ssid length = %d (expected = %d)", ssid_len, ssid_len_max);
+		return false;
+	}
+
+	if (pass_len >= pass_len_max)
+	{
+		ESP_LOGE(TAG, "pass length = %d (expected = %d)", pass_len, pass_len_max);
+		return false;
+	}
+
+	// clean destination
+	memset(ssid, 0, ssid_len_max);
+	memset(pass, 0, pass_len_max);
+
+	// copy data
+	memcpy(ssid, wifi_config.sta.ssid, ssid_len);
+	memcpy(pass, wifi_config.sta.password, pass_len);
+
+	return true;
+}
+
 static void task_wifi_function(void *pvParameters)
 {
 	// 3.4 - Wi-Fi initialization

@@ -13,6 +13,5 @@
 #define __WEBSERVER_H__
 
 void webserver_init(void);
-const char *get_wifi_status(void);
 
 #endif /* __WEBSERVER_H__ */
