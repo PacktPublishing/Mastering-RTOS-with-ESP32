@@ -14,6 +14,8 @@
  * https://bootswatch.com/solar/#top
  *
  * https://github.com/espressif/esp-idf/blob/272b4091f1f1ff169c84a4ee6b67ded4a005a8a7/examples/storage/spiffsgen/main/CMakeLists.txt
+ *
+ * https://esp32tutorials.com/esp32-esp-idf-websocket-web-server/
  */
 
 // INCLUDES
@@ -38,6 +40,7 @@
 #include "task_wifi.h"
 #include "task_blink.h"
 #include "utils.h"
+#include "webserver.h"
 
 // PROJECT DETAILS
 /*
@@ -64,18 +67,22 @@ static httpd_uri_t index_get_uri;
 static httpd_uri_t script_get_uri;
 static httpd_uri_t gauge_get_uri;
 static httpd_uri_t style_get_uri;
+static httpd_uri_t custom_get_uri;
 static httpd_uri_t favicon_get_uri;
 static httpd_uri_t fonts_get_uri;
 static httpd_uri_t config_post_uri;
 
+httpd_handle_t server = NULL;
+
 // FUNCTION PROTOTYPES
+static esp_err_t config_post_handler(httpd_req_t *req);
 static esp_err_t index_get_handler(httpd_req_t *req);
 static esp_err_t script_get_handler(httpd_req_t *req);
 static esp_err_t gauge_get_handler(httpd_req_t *req);
 static esp_err_t style_get_handler(httpd_req_t *req);
+static esp_err_t custom_get_handler(httpd_req_t *req);
 static esp_err_t fonts_get_handler(httpd_req_t *req);
 static esp_err_t favicon_get_handler(httpd_req_t *req);
-static esp_err_t config_post_handler(httpd_req_t *req);
 
 static void wifi_credentials_update(const char *ssid, const char *password);
 
@@ -98,6 +105,10 @@ void webserver_init(void)
 	style_get_uri.method = HTTP_GET;
 	style_get_uri.handler = style_get_handler;
 
+	custom_get_uri.uri = "/bootstrap/custom.min.css";
+	custom_get_uri.method = HTTP_GET;
+	custom_get_uri.handler = custom_get_handler;
+
 	fonts_get_uri.uri = "/bootstrap/fonts.css";
 	fonts_get_uri.method = HTTP_GET;
 	fonts_get_uri.handler = fonts_get_handler;
@@ -110,7 +121,6 @@ void webserver_init(void)
 	config_post_uri.method = HTTP_POST;
 	config_post_uri.handler = config_post_handler;
 
-	httpd_handle_t server = NULL;
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 	ESP_ERROR_CHECK(httpd_start(&server, &config));
 
@@ -118,6 +128,7 @@ void webserver_init(void)
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &script_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &gauge_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &style_get_uri));
+	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &custom_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &fonts_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &favicon_get_uri));
 	ESP_ERROR_CHECK(httpd_register_uri_handler(server, &config_post_uri));
@@ -132,11 +143,13 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 	char buf[100];
 	bool found = false;
 
-	int ret, remaining = req->content_len;
+	int ret = 0;
+	int remaining = req->content_len;
 	ESP_LOGI(TAG, "Context length: %d", req->content_len);
 
 	while (remaining > 0)
 	{
+		memset(buf, 0, sizeof(buf));
 		/* Read the data for the request */
 		if ((ret = httpd_req_recv(req, buf,
 								  MIN(remaining, sizeof(buf)))) <= 0)
@@ -163,12 +176,12 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 		found = true;
 
 		// 4.2 - Get value of expected key from query string
-		if (httpd_query_key_value(buf, "ssid", new_ssid, sizeof(new_ssid)) != ESP_OK)
+		if (findStringValueForKey(buf, "ssid", new_ssid, sizeof(new_ssid)) != true)
 		{
 			ESP_LOGE(TAG, "ssid not sent");
 			found = false;
 		}
-		if (httpd_query_key_value(buf, "password", new_password, sizeof(new_password)) != ESP_OK)
+		if (findStringValueForKey(buf, "password", new_password, sizeof(new_password)) != true)
 		{
 			ESP_LOGE(TAG, "password not sent");
 			found = false;
@@ -194,15 +207,15 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 		}
 	}
 
-	// Redirect back to the configuration page
 	httpd_resp_set_status(req, "303 See Other");
-	httpd_resp_set_hdr(req, "Location", "/config");
-	httpd_resp_send(req, NULL, 0);
+	httpd_resp_set_type(req, "application/json");
+	httpd_resp_send(req, (const char *)buf, ret);
+
+	// httpd_resp_send(req, NULL, 0);
 	return ESP_OK;
 }
 
 // 4.6 - Function to handle GET requests for the configuration page
-
 static esp_err_t index_get_handler(httpd_req_t *req)
 {
 	if (NULL == req)
@@ -215,9 +228,6 @@ static esp_err_t index_get_handler(httpd_req_t *req)
 	extern const unsigned char file_end[] asm("_binary_index_html_end");
 	const size_t file_size = (file_end - file_start);
 	httpd_resp_set_type(req, "text/html");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, PUT");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 	httpd_resp_send(req, (const char *)file_start, file_size);
 	return ESP_OK;
 }
@@ -234,9 +244,6 @@ static esp_err_t script_get_handler(httpd_req_t *req)
 	extern const unsigned char script_end[] asm("_binary_scripts_js_end");
 	const size_t script_size = (script_end - script_start);
 	httpd_resp_set_type(req, "text/javascript");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, PUT");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 	httpd_resp_send(req, (const char *)script_start, script_size);
 	return ESP_OK;
 }
@@ -253,9 +260,6 @@ static esp_err_t gauge_get_handler(httpd_req_t *req)
 	extern const unsigned char gauge_script_end[] asm("_binary_gauge_min_js_end");
 	const size_t gauge_script_size = (gauge_script_end - gauge_script_start);
 	httpd_resp_set_type(req, "text/javascript");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, PUT");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 	httpd_resp_send(req, (const char *)gauge_script_start, gauge_script_size);
 	return ESP_OK;
 }
@@ -272,10 +276,23 @@ static esp_err_t style_get_handler(httpd_req_t *req)
 	extern const unsigned char style_end[] asm("_binary_bootstrap_min_css_end");
 	const size_t style_size = (style_end - style_start);
 	httpd_resp_set_type(req, "text/css");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, PUT");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 	httpd_resp_send(req, (const char *)style_start, style_size);
+	return ESP_OK;
+}
+
+static esp_err_t custom_get_handler(httpd_req_t *req)
+{
+	if (NULL == req)
+	{
+		ESP_LOGE(TAG, "Param error");
+		return ESP_FAIL;
+	}
+
+	extern const unsigned char custom_start[] asm("_binary_custom_min_css_start");
+	extern const unsigned char custom_end[] asm("_binary_custom_min_css_end");
+	const size_t custom_size = (custom_end - custom_start);
+	httpd_resp_set_type(req, "text/css");
+	httpd_resp_send(req, (const char *)custom_start, custom_size);
 	return ESP_OK;
 }
 
@@ -291,16 +308,10 @@ static esp_err_t fonts_get_handler(httpd_req_t *req)
 	extern const unsigned char fonts_css_end[] asm("_binary_fonts_css_end");
 	const size_t fonts_css_size = (fonts_css_end - fonts_css_start);
 	httpd_resp_set_type(req, "text/css");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, PUT");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 	httpd_resp_send(req, (const char *)fonts_css_start, fonts_css_size);
 	return ESP_OK;
 }
 
-/* Handler to respond with an icon file embedded in flash.
- * Browsers expect to GET website icon at URI /favicon.ico.
- * This can be overridden by uploading file with same name */
 static esp_err_t favicon_get_handler(httpd_req_t *req)
 {
 	if (NULL == req)
@@ -313,9 +324,6 @@ static esp_err_t favicon_get_handler(httpd_req_t *req)
 	extern const unsigned char favicon_ico_end[] asm("_binary_favicon_ico_end");
 	const size_t favicon_ico_size = (favicon_ico_end - favicon_ico_start);
 	httpd_resp_set_type(req, "image/x-icon");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, PUT");
-	httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
 	httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
 	return ESP_OK;
 }

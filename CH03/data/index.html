@@ -1,31 +1,57 @@
-<!-- https://canvas-gauges.com/documentation/examples/ -->
-
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<!-- Required meta tags -->
 		<meta charset="utf-8" />
+		<title>CH03: Mastering-RTOS-with-ESP32</title>
 		<meta
 			name="viewport"
 			content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-
-		<!-- Bootstrap CSS -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<link
 			rel="stylesheet"
 			href="bootstrap/bootstrap.min.css"
-			media="screen" />
-		<link rel="stylesheet" href="bootstrap/fonts.css" />
+			media="screen"
+			id="stylesheet" />
+		<link rel="stylesheet" href="bootstrap/custom.min.css" />
 		<script src="bootstrap/gauge.min.js"></script>
 		<script src="bootstrap/scripts.js"></script>
 	</head>
 
 	<body>
-		<div class="jumbotron jumbotron-fluid" style="text-align: center">
-			<h1 class="text-primary">Web Server Project</h1>
-		</div>
+		<nav
+			class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top mb-1">
+			<div class="container-fluid">
+				<a class="navbar-brand" href="#">Sensor Readings</a>
+				<ul class="navbar-nav me-auto">
+					<li class="nav-item">
+						<a
+							class="nav-link active"
+							href="#"
+							onclick="showContainer('home')"
+							>Home</a
+						>
+					</li>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							href="#"
+							onclick="showContainer('sensors')"
+							>Sensors</a
+						>
+					</li>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							href="#"
+							onclick="showContainer('wifi')"
+							>WiFi</a
+						>
+					</li>
+				</ul>
+			</div>
+		</nav>
 
-		<!-- Buttons ================================================== -->
-		<div class="container" style="text-align: center">
+		<div id="homeContainer" class="container" style="text-align: center">
 			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
 				<div class="card-header">Control Buttons</div>
 				<div
@@ -67,55 +93,105 @@
 				</div>
 			</div>
 
-			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
-				<div class="card-header">Real Time Sensor Data</div>
-				<div class="card-body">
-					<canvas
-						data-type="radial-gauge"
-						data-width="300px"
-						data-height="300px"
-						data-units="°C"
-						data-title="Temperature"
-						data-min-value="-50"
-						data-max-value="50"
-						data-major-ticks="[-50,-40,-30,-20,-10,0,10,20,30,40,50]"
-						data-minor-ticks="2"
-						data-stroke-ticks="true"
-						data-highlights='[ {"from": -50, "to": 0, "color": "rgba(0,0, 255, .3)"},
-				{"from": 0, "to": 50, "color": "rgba(255, 0, 0, .3)"} ]'
-						data-ticks-angle="225"
-						data-start-angle="67.5"
-						data-color-major-ticks="#ddd"
-						data-color-minor-ticks="#ddd"
-						data-color-title="#eee"
-						data-color-units="#ccc"
-						data-color-numbers="#eee"
-						data-color-plate="#222"
-						data-border-shadow-width="0"
-						data-borders="true"
-						data-needle-type="arrow"
-						data-needle-width="2"
-						data-needle-circle-size="7"
-						data-needle-circle-outer="true"
-						data-needle-circle-inner="false"
-						data-animation-duration="1500"
-						data-animation-rule="linear"
-						data-color-border-outer="#333"
-						data-color-border-outer-end="#111"
-						data-color-border-middle="#222"
-						data-color-border-middle-end="#111"
-						data-color-border-inner="#111"
-						data-color-border-inner-end="#333"
-						data-color-needle-shadow-down="#333"
-						data-color-needle-circle-outer="#333"
-						data-color-needle-circle-outer-end="#111"
-						data-color-needle-circle-inner="#111"
-						data-color-needle-circle-inner-end="#222"
-						data-value-box-border-radius="0"
-						data-color-value-box-rect="#222"
-						data-color-value-box-rect-end="#333"></canvas>
+			<div class="row">
+				<div class="col-12">
+					<div class="page-header">
+						<h1 id="theme">Default</h1>
+						<p id="description" class="lead">Basic Bootstrap</p>
+						<div class="bs-example">
+							<button type="button" class="btn btn-primary">
+								Primary
+							</button>
+							<button type="button" class="btn btn-secondary">
+								Secondary
+							</button>
+							<button type="button" class="btn btn-success">
+								Success
+							</button>
+							<button type="button" class="btn btn-warning">
+								Warning
+							</button>
+							<button type="button" class="btn btn-danger">
+								Danger
+							</button>
+						</div>
+					</div>
 				</div>
 			</div>
+		</div>
+
+		<div
+			id="sensorsContainer"
+			class="container mb-3 mt-4"
+			style="text-align: center; display: none">
+			<!-- Content for Sensors -->
+			Sensors content goes here.
+		</div>
+
+		<div
+			id="wifiContainer"
+			class="container mb-3 mt-4"
+			style="text-align: center; display: none">
+			<!-- Content for WiFi -->
+			<div style="text-align: left">
+				<h5>
+					Current SSID:
+					<small class="text-body-secondary"
+						><span id="ssidStatus">Not Connected</span></small
+					>
+				</h5>
+
+				<h5>
+					Connection Status:
+					<small class="text-body-secondary"
+						><span id="connectedStatus">Not Available</span></small
+					>
+				</h5>
+			</div>
+			<div class="mb-3 mt-4" style="text-align: left">
+				<button
+					type="button"
+					class="btn btn-info"
+					onclick="showEditForm()">
+					Edit Wi-Fi
+				</button>
+			</div>
+
+			<form id="editForm" style="text-align: left; display: none">
+				<fieldset>
+					<legend>Enter SSID and Password</legend>
+					<div class="form-group">
+						<label for="ssid" class="form-label mt-4">SSID</label>
+						<input
+							type="text"
+							class="form-control"
+							id="ssid"
+							aria-describedby="emailHelp"
+							placeholder="Enter ssid" />
+						<small id="emailHelp" class="form-text text-muted"
+							>We'll try to connect when you hit Connect
+							below.</small
+						>
+					</div>
+					<div class="form-group">
+						<label for="password" class="form-label mt-4"
+							>Password</label
+						>
+						<input
+							type="password"
+							class="form-control"
+							id="password"
+							placeholder="Password"
+							autocomplete="off" />
+					</div>
+					<button
+						type="submit"
+						class="btn btn-primary"
+						onclick="connectToWiFi()">
+						Connect
+					</button>
+				</fieldset>
+			</form>
 		</div>
 	</body>
 </html>
