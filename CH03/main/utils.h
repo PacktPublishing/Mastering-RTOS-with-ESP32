@@ -13,5 +13,6 @@
 
 bool utils_replace_characters(char *s, const char ch, const char r);
 bool findStringValueForKey(const char *jsonString, const char *key, char *value, size_t bufferSize);
+bool findIntValueForKey(const char *jsonString, const char *key, int *value);
 
 #endif /* __UTILS_H__ */

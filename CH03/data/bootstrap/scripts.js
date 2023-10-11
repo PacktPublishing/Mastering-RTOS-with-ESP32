@@ -5,7 +5,7 @@ getParams();
 timers.push(
 	setInterval(function () {
 		getParams();
-	}, 3000)
+	}, 1000)
 );
 
 function showContainer(containerId) {
@@ -51,6 +51,21 @@ function connectToWiFi() {
 	sendPostRequest(postUrl, postData, handleResponse);
 
 	showContainer("wifi");
+}
+
+function led_state_send(state) {
+	const postData = { led: state };
+	const postUrl = "/config";
+
+	function handleResponse(error, response) {
+		if (error) {
+			console.error("Error:", error);
+		} else {
+			console.log("Response:", response);
+		}
+	}
+
+	sendPostRequest(postUrl, postData, handleResponse);
 }
 
 function updateValueWithId(id, value) {

@@ -40,6 +40,7 @@
 // GLOBALS
 static TaskHandle_t xHandleBlink = NULL;
 static uint8_t s_led_state = 0;
+static uint8_t loop_count = 0;
 
 // FUNCTION PROTOTYPES
 static void task_blink_function(void *pvParameters);
@@ -62,6 +63,8 @@ void task_blink_setup(void)
 
 	// 2.2 - Suspend the task by default at start
 	task_blink_suspend();
+
+	loop_count = 0;
 }
 
 // 2.3 - Task suspend public API function
@@ -75,6 +78,8 @@ bool task_blink_suspend(void)
 	vTaskSuspend(xHandleBlink);
 
 	ESP_LOGI(TAG, "Task Suspend!");
+
+	gpio_set_level(BLINK_GPIO, 0);
 
 	return true; // task suspended
 }
@@ -90,14 +95,13 @@ bool task_blink_resume(void)
 	vTaskResume(xHandleBlink);
 
 	ESP_LOGI(TAG, "Task resumed");
+	loop_count = 0;
 
 	return true;
 }
 
 static void task_blink_function(void *pvParameters)
 {
-	static uint8_t loop_count = 0;
-
 	configure_led();
 
 	// 2.5 - Task infinite loop

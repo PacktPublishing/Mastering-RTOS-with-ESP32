@@ -91,13 +91,15 @@
 							type="button btn-lg"
 							class="btn btn-primary btn-lg mr-4"
 							id="relay1"
-							data-toggle="buttons">
+							data-toggle="buttons"
+							onclick="led_state_send(1)">
 							Led On
 						</button>
 						<button
 							type="button btn-lg"
 							class="btn btn-secondary btn-lg"
 							data-toggle="buttons"
+							onclick="led_state_send(2)"
 							id="relay2">
 							Led Off
 						</button>
@@ -115,8 +117,8 @@
 				<div class="card-body p-3 text-center">
 					<canvas
 						data-type="radial-gauge"
-						data-width="300"
-						data-height="300"
+						data-width="200"
+						data-height="200"
 						data-units="mVolt"
 						data-min-value="0"
 						data-max-value="3360"
@@ -144,8 +146,8 @@
 				<div class="card-body p-3 text-center">
 					<canvas
 						data-type="radial-gauge"
-						data-width="300"
-						data-height="300"
+						data-width="200"
+						data-height="200"
 						data-units="mVolt"
 						data-min-value="0"
 						data-max-value="3360"

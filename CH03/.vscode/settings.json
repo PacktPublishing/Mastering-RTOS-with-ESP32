@@ -5,7 +5,9 @@
 		"ATTEN",
 		"bitwidth",
 		"BITWIDTH",
+		"IRAM",
 		"MACSTR",
+		"valueint",
 		"valuestring",
 		"webserver",
 		"wirelessly"

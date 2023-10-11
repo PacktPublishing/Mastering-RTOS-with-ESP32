@@ -23,7 +23,8 @@
 #include "webserver.h"
 #include "task_wifi.h"
 #include "task_blink.h"
-#include "adc_read.h"
+#include "peripheral_adc.h"
+#include "peripheral_gpio.h"
 
 // PROJECT DETAILS
 /*
@@ -70,12 +71,14 @@ void app_main(void)
 	// Initialize modules
 	webserver_init();
 
-	adc_read_setup();
+	peripheral_gpio_setup();
+	peripheral_adc_setup();
 
 	// Infinite loop (Ideal Task Loop)
 	while (true)
 	{
 		// You can add your function calls here
-		vTaskDelay(1000);
+		vTaskDelay(100);
+		peripheral_gpio_loop();
 	}
 }

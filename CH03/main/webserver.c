@@ -36,15 +36,14 @@
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
 
 #include "task_wifi.h"
 #include "task_blink.h"
 #include "utils.h"
 #include "webserver.h"
 #include "task_wifi.h"
-#include "adc_read.h"
+#include "peripheral_adc.h"
+#include "peripheral_gpio.h"
 
 // PROJECT DETAILS
 /*
@@ -155,6 +154,7 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 	// Extract new SSID and password from the POST request content
 	char new_ssid[32];
 	char new_password[64];
+	int led_state = 0;
 	char buf[100];
 	bool found = false;
 
@@ -200,6 +200,21 @@ static esp_err_t config_post_handler(httpd_req_t *req)
 		{
 			ESP_LOGE(TAG, "password not sent");
 			found = false;
+		}
+
+		if (findIntValueForKey(buf, "led", &led_state) == true)
+		{
+			ESP_LOGI(TAG, "Led state = %d", led_state);
+			if (led_state == 1)
+			{
+				// ON
+				peripheral_gpio_on();
+			}
+			else
+			{
+				// OFF
+				peripheral_gpio_off();
+			}
 		}
 
 		if (found)
@@ -270,11 +285,11 @@ static esp_err_t config_get_handler(httpd_req_t *req)
 			}
 			if (httpd_query_key_value(buf_rx, "adc_34", param, sizeof(param)) == ESP_OK)
 			{
-				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"adc_34\": \"%d\"", adc_read_value_io_34());
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"adc_34\": \"%d\"", peripheral_adc_value_io_34());
 			}
 			if (httpd_query_key_value(buf_rx, "adc_35", param, sizeof(param)) == ESP_OK)
 			{
-				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"adc_35\": \"%d\"", adc_read_value_io_35());
+				buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, ",\"adc_35\": \"%d\"", peripheral_adc_value_io_35());
 			}
 
 			buf_tx_len += snprintf(buf_tx + buf_tx_len, sizeof(buf_tx) - buf_tx_len, "}}\r\n");

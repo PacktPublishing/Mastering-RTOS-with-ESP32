@@ -29,7 +29,7 @@
 
 // FUNCTION PROTOTYPES
 
-// FUNCTIONs
+// FUNCTIONS
 bool utils_replace_characters(char *s, const char ch, const char r)
 {
 	uint16_t i = 0;
@@ -67,6 +67,31 @@ bool findStringValueForKey(const char *jsonString, const char *key, char *value,
 		if (NULL != value)
 		{
 			snprintf(value, bufferSize, "%s", item->valuestring);
+		}
+		cJSON_Delete(root);
+		return true;
+	}
+
+	cJSON_Delete(root);
+	return false; // Key not found or unsupported key type
+}
+
+bool findIntValueForKey(const char *jsonString, const char *key, int *value)
+{
+	// Parse the JSON string
+	cJSON *root = cJSON_Parse(jsonString);
+	if (root == NULL)
+	{
+		return false; // Failed to parse JSON
+	}
+
+	cJSON *item = cJSON_GetObjectItemCaseSensitive(root, key);
+
+	if (item && cJSON_IsNumber(item))
+	{
+		if (NULL != value)
+		{
+			*value = item->valueint;
 		}
 		cJSON_Delete(root);
 		return true;
