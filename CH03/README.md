@@ -32,6 +32,7 @@ Following the steps explained in chapter 1 of "Mastering RTOS with ESP32" book:
 # References
 
 1. Learn about creating new project [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+2. Gauges [Web Page](https://canvas-gauges.com/documentation/examples/)
 
 ## Project folder contents
 

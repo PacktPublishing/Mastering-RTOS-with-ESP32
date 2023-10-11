@@ -5,6 +5,7 @@ getWiFiStatus();
 timers.push(
 	setInterval(function () {
 		getWiFiStatus();
+		updateGauge();
 	}, 5000)
 );
 
@@ -135,11 +136,8 @@ function sendPostRequest(url, data, callback) {
 	console.log("Sent POST:", url, jsonData);
 }
 
-function updateGauge() {
-	document.gauges.forEach(function (gauge) {
-		gauge.value = gauge.value + 10;
-		// gauge.value =
-		// 	Math.random() * (gauge.options.maxValue - gauge.options.minValue) +
-		// 	gauge.options.minValue;
-	});
+function updateGauge(value) {
+	var gauge = document.gauges.get("radial-one");
+	gauge.value = gauge.value + 140;
+	console.log("New Value for Gauge: ", gauge.value);
 }
