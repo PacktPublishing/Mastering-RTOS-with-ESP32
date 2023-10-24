@@ -1,0 +1,9 @@
+{
+	"C_Cpp.intelliSenseEngine": "default",
+	"idf.adapterTargetName": "esp32",
+	"idf.portWin": "COM5",
+	"idf.flashType": "UART",
+	"files.associations": {
+		"esp_event.h": "c"
+	}
+}
