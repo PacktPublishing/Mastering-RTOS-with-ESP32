@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>CH03: Mastering-RTOS-with-ESP32</title>
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<link
+			rel="stylesheet"
+			href="bootstrap/bootstrap.min.css"
+			media="screen"
+			id="stylesheet" />
+		<link rel="stylesheet" href="bootstrap/custom.min.css" />
+		<script src="bootstrap/gauge.min.js"></script>
+		<script src="bootstrap/moment.min.js"></script>
+		<script src="bootstrap/range.min.js"></script>
+		<script src="bootstrap/scripts.js"></script>
+	</head>
+
+	<body>
+		<nav
+			class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top mb-1">
+			<div class="container-fluid">
+				<a class="navbar-brand" href="#">Sensor Readings</a>
+				<ul class="navbar-nav me-auto">
+					<li class="nav-item">
+						<a
+							class="nav-link active"
+							href="#"
+							onclick="showContainer('home')"
+							>Home</a
+						>
+					</li>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							href="#"
+							onclick="showContainer('sensors')"
+							>Sensors</a
+						>
+					</li>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							href="#"
+							onclick="showContainer('wifi')"
+							>WiFi</a
+						>
+					</li>
+				</ul>
+			</div>
+		</nav>
+
+		<div class="container text-left">
+			<div class="card bg-light mt-4" style="max-width: 100%">
+				<div class="card-header">Current Wi-Fi Connection</div>
+				<div class="card-body p-3">
+					<h6>
+						Current SSID:
+						<small class="text-body-secondary"
+							><span id="wifi_ssid">Not Connected</span></small
+						>
+					</h6>
+
+					<h6>
+						Connection Status:
+						<small class="text-body-secondary"
+							><span id="wifi_status">Not Available</span></small
+						>
+					</h6>
+
+					<h6>
+						WiFi Signal:
+						<small class="text-body-secondary"
+							><span id="wifi_signal">Not Available</span></small
+						>
+					</h6>
+				</div>
+			</div>
+		</div>
+
+		<div id="homeContainer" class="container text-left">
+			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
+				<div class="card-header">Control Buttons</div>
+				<div class="card-body p-3 text-left">
+					<div
+						class="btn-group-lg m-1"
+						role="group"
+						aria-label="Relay Buttons">
+						<button
+							type="button btn-lg"
+							class="btn btn-primary btn-lg mr-4"
+							id="relay1"
+							data-toggle="buttons"
+							onclick="led_state_send(1)">
+							Led On
+						</button>
+						<button
+							type="button btn-lg"
+							class="btn btn-secondary btn-lg"
+							data-toggle="buttons"
+							onclick="led_state_send(2)"
+							id="relay2">
+							Led Off
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
+				<div class="card-header">Update Time Zone Location</div>
+				<div class="card-body p-3 text-left">
+					<input
+						type="text"
+						id="searchInput"
+						placeholder="Type to search for a time zone" />
+					<div id="results"></div>
+					<div id="tm_location"></div>
+				</div>
+			</div>
+		</div>
+
+		<div
+			id="sensorsContainer"
+			class="container mb-3 mt-4"
+			style="display: none">
+			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
+				<div class="card-header">ADC GPIO-34</div>
+				<div class="card-body p-3 text-center">
+					<canvas
+						data-type="radial-gauge"
+						data-width="200"
+						data-height="200"
+						data-units="mVolt"
+						data-min-value="0"
+						data-max-value="3360"
+						data-major-ticks="0,280,560,840,1120,1400,1680,1960,2240,2530,2800,3080"
+						data-minor-ticks="2"
+						data-stroke-ticks="true"
+						data-highlights='[
+					{"from": 2530, "to": 3360, "color": "rgba(200, 50, 50, .75)"}
+				]'
+						data-color-plate="#fff"
+						data-border-shadow-width="0"
+						data-borders="false"
+						data-needle-type="arrow"
+						data-needle-width="2"
+						data-needle-circle-size="7"
+						data-needle-circle-outer="true"
+						data-needle-circle-inner="false"
+						data-animation-duration="1500"
+						data-animation-rule="linear"
+						id="radial-one"></canvas>
+				</div>
+			</div>
+			<div class="card bg-light mb-3 mt-4" style="max-width: 100%">
+				<div class="card-header">ADC GPIO-35</div>
+				<div class="card-body p-3 text-center">
+					<canvas
+						data-type="radial-gauge"
+						data-width="200"
+						data-height="200"
+						data-units="mVolt"
+						data-min-value="0"
+						data-max-value="3360"
+						data-major-ticks="0,280,560,840,1120,1400,1680,1960,2240,2530,2800,3080"
+						data-minor-ticks="2"
+						data-stroke-ticks="true"
+						data-highlights='[
+					{"from": 2530, "to": 3360, "color": "rgba(200, 50, 50, .75)"}
+				]'
+						data-color-plate="#fff"
+						data-border-shadow-width="0"
+						data-borders="false"
+						data-needle-type="arrow"
+						data-needle-width="2"
+						data-needle-circle-size="7"
+						data-needle-circle-outer="true"
+						data-needle-circle-inner="false"
+						data-animation-duration="1500"
+						data-animation-rule="linear"
+						id="radial-two"></canvas>
+				</div>
+			</div>
+		</div>
+
+		<div
+			id="wifiContainer"
+			class="container mb-3 mt-4"
+			style="text-align: center; display: none">
+			<!-- Content for WiFi -->
+			<div class="mb-3 mt-4" style="text-align: left">
+				<button
+					type="button"
+					class="btn btn-info"
+					onclick="showEditForm()">
+					Update Wi-Fi
+				</button>
+			</div>
+			<form id="wifi_update_form" style="text-align: left; display: none">
+				<fieldset>
+					<legend>Enter SSID and Password</legend>
+					<div class="form-group">
+						<label for="ssid" class="form-label mt-4">SSID</label>
+						<input
+							type="text"
+							class="form-control"
+							id="ssid"
+							aria-describedby="emailHelp"
+							placeholder="Enter ssid" />
+						<small id="emailHelp" class="form-text text-muted"
+							>We'll try to connect when you hit Connect
+							below.</small
+						>
+					</div>
+					<div class="form-group">
+						<label for="password" class="form-label mt-4"
+							>Password</label
+						>
+						<input
+							type="password"
+							class="form-control"
+							id="password"
+							placeholder="Password"
+							autocomplete="off" />
+					</div>
+					<button
+						type="submit"
+						class="btn btn-primary"
+						onclick="connectToWiFi()">
+						Connect
+					</button>
+				</fieldset>
+			</form>
+		</div>
+
+		<script>
+			const timeZones = moment.tz.names();
+			const searchInput = document.getElementById("searchInput");
+			const resultsDiv = document.getElementById("results");
+			const tm_location = document.getElementById("tm_location");
+
+			// Function to update the input field with the selected time zone
+			function selectTimeZone(timeZone) {
+				searchInput.value = timeZone;
+				resultsDiv.innerHTML = ""; // Clear the results
+				tm_location.innerHTML = searchInput.value;
+				console.log("Selected Time Zone: ", searchInput.value);
+			}
+
+			// Function to filter and display time zones as the user types
+			searchInput.addEventListener("input", function () {
+				const searchTerm = this.value.trim().toLowerCase();
+				resultsDiv.innerHTML = "";
+
+				if (searchTerm === "") {
+					return; // If the input is empty, clear the results
+				}
+
+				const displayedResults = [];
+				let count = 0;
+
+				timeZones.forEach(function (timeZone) {
+					if (
+						timeZone.toLowerCase().includes(searchTerm) &&
+						count < 10
+					) {
+						const option = document.createElement("div");
+						option.textContent = timeZone;
+						option.addEventListener("click", function () {
+							selectTimeZone(timeZone); // Handle selection
+						});
+						resultsDiv.appendChild(option);
+						displayedResults.push(timeZone);
+						count++;
+					}
+				});
+			});
+		</script>
+	</body>
+</html>

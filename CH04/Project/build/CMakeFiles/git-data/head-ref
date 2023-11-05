@@ -1,0 +1,14 @@
+0000000000000000000000000000000000000000 afe47ea2982423dd2f55954f33c3c70c2952efd0 Bsingh <bsingh@greyter.com> 1694141055 -0400	clone: from https://github.com/PacktPublishing/Mastering-RTOS-with-ESP32.git
+afe47ea2982423dd2f55954f33c3c70c2952efd0 b8fe6dacef7690adc619c253e3878b8e5fb53b02 Bsingh <bsingh@greyter.com> 1694141158 -0400	commit: Chapter one project added
+b8fe6dacef7690adc619c253e3878b8e5fb53b02 2b6e8ef3c6feaeb0fdc4a5d64e32af87b51ff3b4 Bsingh <bsingh@greyter.com> 1694141325 -0400	commit: gitignore added retracted files
+2b6e8ef3c6feaeb0fdc4a5d64e32af87b51ff3b4 6bab9811e987fd2128f72e3db0e5157c24f0e484 Bsingh <bsingh@greyter.com> 1694141502 -0400	commit: ch02 project added
+6bab9811e987fd2128f72e3db0e5157c24f0e484 1f9ce78d620d8c97d075e6351d2a5f8318f0efad Bsingh <bsingh@greyter.com> 1694485386 -0400	commit: Chapter 2 - code comments added
+1f9ce78d620d8c97d075e6351d2a5f8318f0efad 79b380ee0a5c4b51f9064cfae32c50d1d7bf9538 Bsingh <bsingh@greyter.com> 1696387230 -0400	commit: ch03 project added
+79b380ee0a5c4b51f9064cfae32c50d1d7bf9538 a03d7e6fa8bd11787e0e20df893d278f26f7056b Bsingh <bsingh@greyter.com> 1696991947 -0400	commit: 03: new html pages and WiFi config page
+a03d7e6fa8bd11787e0e20df893d278f26f7056b 574b17a3b5c2ac6912f7f62daaf37f95729754f6 Bsingh <bsingh@greyter.com> 1696995536 -0400	commit: WiFI store credential if connection succeed
+574b17a3b5c2ac6912f7f62daaf37f95729754f6 4f3b8e668d9cacd96d9b4142fd42bfe5df9b14f6 Bsingh <bsingh@greyter.com> 1697001839 -0400	commit: Sensor reading web server pages good
+4f3b8e668d9cacd96d9b4142fd42bfe5df9b14f6 d5b3c68ea7156d50c9a4ca11fb7db28d5d112506 Bsingh <bsingh@greyter.com> 1697002671 -0400	commit: WiFi status reading is done using XML Http
+d5b3c68ea7156d50c9a4ca11fb7db28d5d112506 76758758611b70426929b3177f31e5250d781eb9 Bsingh <bsingh@greyter.com> 1697006056 -0400	commit: gauge added
+76758758611b70426929b3177f31e5250d781eb9 587d6bea17ea7c5dd083c05b119b8b7a7e372833 Bsingh <bsingh@greyter.com> 1697012357 -0400	commit: The two gauges are working now
+587d6bea17ea7c5dd083c05b119b8b7a7e372833 d4a08507e5cafd47299edb4a661481617ae65a6b Bsingh <bsingh@greyter.com> 1697047924 -0400	commit: GPIO driver added and Led control as well
+d4a08507e5cafd47299edb4a661481617ae65a6b c6bb6de09cf6c511fa3f954ec7672fac951d65c5 Bsingh <bsingh@greyter.com> 1698114691 -0400	commit: The chapter 03 is project and exercise are supdated
